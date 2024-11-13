@@ -6,8 +6,9 @@ import { Article } from './article';
 })
 export class ArticleService {
 
-  articles: Article[] = this.getFromLocalStorage(); // []
-  
+  articles: Article[] = this.getFromLocalStorage("articles");
+  deletedArticles: Article[] = this.getFromLocalStorage("deleted-articles");
+
   constructor() { }
 
   create(article: Article) {
@@ -18,16 +19,25 @@ export class ArticleService {
   delete(article: Article) {
     const index = this.articles.findIndex((x) => x.id === article.id);
     this.articles.splice(index, 1);
+    this.deletedArticles.push(article);
     localStorage.setItem('articles', JSON.stringify(this.articles));  // on passe de JS en String pour le stocker dans le LocalStorage
+    localStorage.setItem('deleted-articles', JSON.stringify(this.deletedArticles));
   }
 
-  getFromLocalStorage(): Article[] {
-    const stringData = localStorage.getItem('articles');
-    // On ramène les données stockées dans le LocalStorage de String à JS
-    // || signifie "ou" en JS, si stringData est null ou undefined, on renvoie un tableau vide
-    const articles: Article[] = JSON.parse(stringData || '[]'); 
+  deleteFromDeletedArticles(article: Article) {
+    const index = this.deletedArticles.findIndex((x) => x.id === article.id);
+    this.deletedArticles.splice(index, 1);
+    localStorage.setItem('deleted-articles', JSON.stringify(this.deletedArticles));
+  }
 
+  restore(article: Article) {
+    this.create(article);
+    this.deleteFromDeletedArticles(article);
+  }
+
+  getFromLocalStorage(item: string): Article[] {
+    const stringData = localStorage.getItem(item);
+    const articles: Article[] = JSON.parse(stringData || '[]'); 
     return articles;
   }
-  
 }
